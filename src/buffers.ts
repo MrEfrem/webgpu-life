@@ -1,10 +1,14 @@
 const GRID_SIZE = 32;
 
-const vertices = new Float32Array([
-  -0.8, -0.8, 0.8, -0.8, 0.8, 0.8,
-
-  -0.8, -0.8, 0.8, 0.8, -0.8, 0.8,
+// prettier-ignore
+const vertices = new Float32Array([  
+  -0.8, 0.8,
+  -0.8, -0.8, 
+  0.8, 0.8, 
+  0.8, -0.8
 ]);
+
+const indices = new Uint16Array([0, 1, 2, 2, 1, 3]);
 
 export const getBuffers = (device: GPUDevice) => {
   // Create a uniform buffer that describes the grid.
@@ -58,12 +62,20 @@ export const getBuffers = (device: GPUDevice) => {
     ],
   };
 
+  const indexBuffer = device.createBuffer({
+    label: 'Triangle indices',
+    size: indices.byteLength,
+    usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
+  });
+  device.queue.writeBuffer(indexBuffer, 0, indices);
+
   return {
     vertexBufferLayout,
     uniformBuffer,
     storageBuffers,
     vertexBuffer,
-    vertices,
+    indices,
+    indexBuffer,
     GRID_SIZE,
   };
 };

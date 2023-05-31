@@ -11,7 +11,8 @@ const {
   uniformBuffer,
   storageBuffers,
   vertexBuffer,
-  vertices,
+  indices,
+  indexBuffer,
   GRID_SIZE,
 } = getBuffers(device);
 
@@ -64,7 +65,8 @@ function updateGrid() {
   pass.setPipeline(cellPipeline);
   pass.setBindGroup(0, bindGroups[step % 2]);
   pass.setVertexBuffer(0, vertexBuffer);
-  pass.draw(vertices.length / 2, GRID_SIZE * GRID_SIZE);
+  pass.setIndexBuffer(indexBuffer, 'uint16');
+  pass.drawIndexed(indices.length, GRID_SIZE * GRID_SIZE);
 
   // End the render pass and submit the command buffer
   pass.end();
