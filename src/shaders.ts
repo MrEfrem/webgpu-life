@@ -4,41 +4,23 @@ export function cellShaderModule(device: GPUDevice) {
   return device.createShaderModule({
     label: 'Cell shader',
     code: `
-        struct VertexInput {
-            @location(0) pos: vec2f,
-            @builtin(instance_index) instance: u32,
-        };
-        
-        struct VertexOutput {
-            @builtin(position) pos: vec4f,
-            @location(0) cell: vec2f,
-        };
-        
-        @group(0) @binding(0) var<uniform> grid: vec2f;
-        @group(0) @binding(1) var<storage> cellState: array<u32>;
-        
-        @vertex
-        fn vertexMain(input: VertexInput) -> VertexOutput  {
-            let i = f32(input.instance);
-            let cell = vec2f(i % grid.x, floor(i / grid.x));
-            let state = f32(cellState[input.instance]);
-        
-            let cellOffset = cell / grid * 2f;
+      @vertex
+      fn vertexMain(
+        @builtin(vertex_index) VertexIndex : u32
+      ) -> @builtin(position) vec4<f32> {
+        var pos = array<vec2<f32>, 3>(
+          vec2(0.0, 0.5),
+          vec2(-0.5, -0.5),
+          vec2(0.5, -0.5)
+        );
+      
+        return vec4<f32>(pos[VertexIndex], 0.0, 1.0);
+      }    
 
-            // Scale the position by the cell's active state.
-            let gridPos = (input.pos*state+1f) / grid - 1f + cellOffset;
-            
-            var output: VertexOutput;
-            output.pos = vec4f(gridPos, 0f, 1f);
-            output.cell = cell;
-            return output;
-        }
-        
-        @fragment
-        fn fragmentMain(input: VertexOutput) -> @location(0) vec4f {
-            let c = input.cell / grid;
-            return vec4f(c, 1f-c.x, 1f);
-        }
+      @fragment
+      fn fragmentMain() -> @location(0) vec4<f32> {
+        return vec4<f32>(1.0, 0.0, 0.0, 1.0);
+      }
     `,
   });
 }

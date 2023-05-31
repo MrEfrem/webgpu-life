@@ -32,6 +32,7 @@ export async function initGpu() {
   context.configure({
     device,
     format: canvasFormat,
+    alphaMode: 'premultiplied',
   });
 
   return {
@@ -39,5 +40,6 @@ export async function initGpu() {
     adapter,
     context,
     canvasFormat,
+    canvas,
   };
 }
