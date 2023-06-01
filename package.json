@@ -13,6 +13,7 @@
     "@webgpu/types": "^0.1.32",
     "prettier": "^2.8.8",
     "typescript": "^5.0.2",
-    "vite": "^4.3.2"
+    "vite": "^4.3.2",
+    "wgpu-matrix": "^2.4.0"
   }
 }

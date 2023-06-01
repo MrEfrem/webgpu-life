@@ -1,69 +1,95 @@
-const GRID_SIZE = 32;
+const cubeVertexSize = 4 * 10; // Byte size of one cube vertex.
+const cubePositionOffset = 0;
+// const cubeColorOffset = 4 * 4; // Byte offset of cube vertex color attribute.
+const cubeUVOffset = 4 * 8;
 
-const vertices = new Float32Array([
-  -0.8, -0.8, 0.8, -0.8, 0.8, 0.8,
+// prettier-ignore
+const cubeVertexArray = new Float32Array([
+  // float4 position, float4 color, float2 uv,
+  1, -1, 1, 1,   1, 0, 1, 1,  0, 1,
+  -1, -1, 1, 1,  0, 0, 1, 1,  1, 1,
+  -1, -1, -1, 1, 0, 0, 0, 1,  1, 0,
+  1, -1, -1, 1,  1, 0, 0, 1,  0, 0,
+  1, -1, 1, 1,   1, 0, 1, 1,  0, 1,
+  -1, -1, -1, 1, 0, 0, 0, 1,  1, 0,
 
-  -0.8, -0.8, 0.8, 0.8, -0.8, 0.8,
+  1, 1, 1, 1,    1, 1, 1, 1,  0, 1,
+  1, -1, 1, 1,   1, 0, 1, 1,  1, 1,
+  1, -1, -1, 1,  1, 0, 0, 1,  1, 0,
+  1, 1, -1, 1,   1, 1, 0, 1,  0, 0,
+  1, 1, 1, 1,    1, 1, 1, 1,  0, 1,
+  1, -1, -1, 1,  1, 0, 0, 1,  1, 0,
+
+  -1, 1, 1, 1,   0, 1, 1, 1,  0, 1,
+  1, 1, 1, 1,    1, 1, 1, 1,  1, 1,
+  1, 1, -1, 1,   1, 1, 0, 1,  1, 0,
+  -1, 1, -1, 1,  0, 1, 0, 1,  0, 0,
+  -1, 1, 1, 1,   0, 1, 1, 1,  0, 1,
+  1, 1, -1, 1,   1, 1, 0, 1,  1, 0,
+
+  -1, -1, 1, 1,  0, 0, 1, 1,  0, 1,
+  -1, 1, 1, 1,   0, 1, 1, 1,  1, 1,
+  -1, 1, -1, 1,  0, 1, 0, 1,  1, 0,
+  -1, -1, -1, 1, 0, 0, 0, 1,  0, 0,
+  -1, -1, 1, 1,  0, 0, 1, 1,  0, 1,
+  -1, 1, -1, 1,  0, 1, 0, 1,  1, 0,
+
+  1, 1, 1, 1,    1, 1, 1, 1,  0, 1,
+  -1, 1, 1, 1,   0, 1, 1, 1,  1, 1,
+  -1, -1, 1, 1,  0, 0, 1, 1,  1, 0,
+  -1, -1, 1, 1,  0, 0, 1, 1,  1, 0,
+  1, -1, 1, 1,   1, 0, 1, 1,  0, 0,
+  1, 1, 1, 1,    1, 1, 1, 1,  0, 1,
+
+  1, -1, -1, 1,  1, 0, 0, 1,  0, 1,
+  -1, -1, -1, 1, 0, 0, 0, 1,  1, 1,
+  -1, 1, -1, 1,  0, 1, 0, 1,  1, 0,
+  1, 1, -1, 1,   1, 1, 0, 1,  0, 0,
+  1, -1, -1, 1,  1, 0, 0, 1,  0, 1,
+  -1, 1, -1, 1,  0, 1, 0, 1,  1, 0,
 ]);
 
 export const getBuffers = (device: GPUDevice) => {
   // Create a uniform buffer that describes the grid.
-  const uniformArray = new Float32Array([GRID_SIZE, GRID_SIZE]);
+  const uniformBufferSize = 4 * 16; // 4x4 matrix
   const uniformBuffer = device.createBuffer({
     label: 'Grid Uniforms',
-    size: uniformArray.byteLength,
+    size: uniformBufferSize,
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
-  device.queue.writeBuffer(uniformBuffer, 0, uniformArray);
 
   const vertexBuffer = device.createBuffer({
     label: 'Cell vertices',
-    size: vertices.byteLength,
+    size: cubeVertexArray.byteLength,
     usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
   });
 
-  device.queue.writeBuffer(vertexBuffer, /*bufferOffset=*/ 0, vertices);
+  device.queue.writeBuffer(vertexBuffer, /*bufferOffset=*/ 0, cubeVertexArray);
 
-  // Create an array representing the active state of each cell.
-  const cellStateArray = new Uint32Array(GRID_SIZE * GRID_SIZE);
-
-  // Create two storage buffers to hold the cell state.
-  const storageBuffers = [
-    device.createBuffer({
-      label: 'Cell State A',
-      size: cellStateArray.byteLength,
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
-    }),
-    device.createBuffer({
-      label: 'Cell State B',
-      size: cellStateArray.byteLength,
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
-    }),
-  ];
-
-  // Mark every third cell of the first grid as active.
-  for (let i = 0; i < cellStateArray.length; ++i) {
-    cellStateArray[i] = Math.random() > 0.6 ? 1 : 0;
-  }
-  device.queue.writeBuffer(storageBuffers[0], 0, cellStateArray);
-
-  const vertexBufferLayout = {
-    arrayStride: 8,
-    attributes: [
-      {
-        format: 'float32x2',
-        offset: 0,
-        shaderLocation: 0, // Position, see vertex shader
-      } satisfies GPUVertexAttribute,
-    ],
-  };
+  const vertexBufferLayout = [
+    {
+      arrayStride: cubeVertexSize,
+      attributes: [
+        {
+          // position
+          shaderLocation: 0,
+          offset: cubePositionOffset,
+          format: 'float32x4',
+        },
+        {
+          // uv
+          shaderLocation: 1,
+          offset: cubeUVOffset,
+          format: 'float32x2',
+        },
+      ],
+    },
+  ] satisfies GPUVertexBufferLayout[];
 
   return {
     vertexBufferLayout,
     uniformBuffer,
-    storageBuffers,
     vertexBuffer,
-    vertices,
-    GRID_SIZE,
+    cubeVertexArray,
   };
 };
