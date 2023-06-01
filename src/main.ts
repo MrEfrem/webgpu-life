@@ -4,6 +4,7 @@ import { initGpu } from './helpers';
 import { getPipelines } from './pipelines';
 import { getBuffers } from './buffers';
 import { getBindGroups } from './bindGroups';
+import { getTextures } from './textures';
 
 const { device, context, canvasFormat, canvas } = await initGpu();
 
@@ -22,24 +23,13 @@ const { uniformBindGroup } = getBindGroups({
   uniformBuffer,
 });
 
-const sampleCount = 4;
-
-const depthTexture = device.createTexture({
-  size: [canvas.width, canvas.height],
-  format: 'depth24plus',
-  usage: GPUTextureUsage.RENDER_ATTACHMENT,
-  sampleCount,
+const { colorView, depthView } = getTextures({
+  device,
+  canvas,
+  canvasFormat,
 });
 
-const texture = device.createTexture({
-  size: [canvas.width, canvas.height],
-  sampleCount,
-  format: canvasFormat,
-  usage: GPUTextureUsage.RENDER_ATTACHMENT,
-});
-const view = texture.createView();
-
-const aspect = canvas.width / canvas.height;
+const aspect = 1; // canvas.width / canvas.height;
 const projectionMatrix = mat4.perspective((2 * Math.PI) / 5, aspect, 1, 100.0);
 const modelViewProjectionMatrix = mat4.create();
 
@@ -76,7 +66,7 @@ function updateGrid() {
   const pass = encoder.beginRenderPass({
     colorAttachments: [
       {
-        view,
+        view: colorView,
         resolveTarget: context.getCurrentTexture().createView(),
         loadOp: 'clear',
         clearValue: { r: 0.5, g: 0.5, b: 0.5, a: 1.0 },
@@ -84,8 +74,7 @@ function updateGrid() {
       },
     ],
     depthStencilAttachment: {
-      view: depthTexture.createView(),
-
+      view: depthView,
       depthClearValue: 1.0,
       depthLoadOp: 'clear',
       depthStoreOp: 'store',

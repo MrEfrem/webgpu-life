@@ -1,3 +1,4 @@
+import { sampleCount } from './constants';
 import { cellShaderModule, simulationShaderModule } from './shaders';
 
 function getRenderPipeline({
@@ -45,7 +46,7 @@ function getRenderPipeline({
       format: 'depth24plus',
     },
     multisample: {
-      count: 4,
+      count: sampleCount,
     },
   });
 }
