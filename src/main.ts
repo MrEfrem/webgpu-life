@@ -17,19 +17,21 @@ const { cellPipeline } = getPipelines({
   vertexBufferLayout,
 });
 
-const { uniformBindGroup } = getBindGroups({
-  device,
-  cellPipeline,
-  uniformBuffer,
-});
-
-const { colorView, depthView } = getTextures({
+const { colorView, depthView, cubeTexture, sampler } = await getTextures({
   device,
   canvas,
   canvasFormat,
 });
 
-const aspect = 1; // canvas.width / canvas.height;
+const { uniformBindGroup } = getBindGroups({
+  device,
+  cellPipeline,
+  uniformBuffer,
+  cubeTexture,
+  sampler,
+});
+
+const aspect = canvas.width / canvas.height;
 const projectionMatrix = mat4.perspective((2 * Math.PI) / 5, aspect, 1, 100.0);
 const modelViewProjectionMatrix = mat4.create();
 
