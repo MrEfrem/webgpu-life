@@ -32,10 +32,7 @@ export async function getTextures({
   const cubeTexture = device.createTexture({
     size: [imageBitmap.width, imageBitmap.height, 1],
     format: 'rgba8unorm',
-    usage:
-      GPUTextureUsage.TEXTURE_BINDING |
-      GPUTextureUsage.COPY_DST |
-      GPUTextureUsage.RENDER_ATTACHMENT,
+    usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
   });
   device.queue.copyExternalImageToTexture(
     { source: imageBitmap },
