@@ -14,15 +14,28 @@ export async function initGpu() {
   const canvas = document.querySelector('canvas');
   showErrorMessage(canvas, 'Canvas is not found');
 
-  showErrorMessage(navigator.gpu, 'WebGPU not supported on this browser.');
+  showErrorMessage(navigator.gpu, 'This browser does not support WebGPU.');
 
   const adapter = await navigator.gpu.requestAdapter();
-  showErrorMessage(adapter, 'No appropriate GPUAdapter found.');
+  showErrorMessage(
+    adapter,
+    'This browser supports WebGPU but it appears disabled.'
+  );
 
   const device = await adapter.requestDevice();
 
+  device.lost.then((info) => {
+    showErrorMessage(null, `WebGPU device was lost: ${info.message}`);
+
+    // 'reason' will be 'destroyed' if we intentionally destroy the device.
+    if (info.reason !== 'destroyed') {
+      // try again
+      // initGpu();
+    }
+  });
+
   const context = canvas.getContext('webgpu');
-  showErrorMessage(context, 'Canvas context WebGPU is not found');
+  showErrorMessage(context, 'Canvas context WebGPU is not found.');
 
   const devicePixelRatio = window.devicePixelRatio || 1;
   canvas.width = canvas.clientWidth * devicePixelRatio;
